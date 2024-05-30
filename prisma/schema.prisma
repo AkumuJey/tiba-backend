@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model HealthcareProvider {
+  id           BigInt         @id @unique @default(autoincrement())
+  createdAt    DateTime       @default(now())
+  firstName    String
+  lastName     String
+  title        String
+  email        String
+  phoneNo      String
+  verified     Boolean
+  Appointments Appointments[]
+  Prescription Prescription[]
+
+  @@map("healthcare_provider")
+}
+
+model Patient {
+  id                    BigInt           @id @unique @default(autoincrement())
+  createdAt             DateTime         @default(now())
+  firstName             String
+  lastName              String
+  dateOfBirth           DateTime         @db.Date
+  sex                   String
+  address               String?
+  email                 String
+  phoneNumber           String
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  Appointments          Appointments[]
+  Prescription          Prescription[]
+  MedicalHistory        MedicalHistory[]
+
+  @@map("patient") // Maps the model to the table name in the database
+}
+
+model DrugCategory {
+  id           BigInt   @id @unique @default(autoincrement())
+  createdAt    DateTime @default(now())
+  categoryName String
+
+  drugs Drug[]
+
+  @@map("drug_category")
+}
+
+model Drug {
+  id                 BigInt               @id @unique @default(autoincrement())
+  createdAt          DateTime             @default(now())
+  categoryID         BigInt
+  brandName          String
+  pharmcoName        String
+  manufactureDate    DateTime             @db.Date
+  expiryDate         DateTime             @db.Date
+  batchNo            BigInt
+  unitsAvailable     String
+  pricePerUnit       Float
+  drugCategory       DrugCategory         @relation(fields: [categoryID], references: [id])
+  PrescriptionDetail PrescriptionDetail[]
+
+  @@map("drug")
+}
+
+model Appointments {
+  id               BigInt   @id @unique
+  createdAt        DateTime @default(now())
+  patientID        BigInt
+  healthProviderID BigInt
+  venue            String
+  appointmentTime  DateTime
+  amount           Float
+
+  patient            Patient            @relation(fields: [patientID], references: [id])
+  healthcareProvider HealthcareProvider @relation(fields: [healthProviderID], references: [id])
+
+  @@map("appointments")
+}
+
+model Prescription {
+  id                   BigInt   @id @unique
+  createdAt            DateTime @default(now())
+  patientID            BigInt
+  healthcareProviderID BigInt
+  dosage               String
+  date                 DateTime @db.Date
+  instruction          String?
+
+  patient            Patient            @relation(fields: [patientID], references: [id])
+  healthcareProvider HealthcareProvider @relation(fields: [healthcareProviderID], references: [id])
+
+  prescriptionDetails PrescriptionDetail[]
+
+  @@map("prescription")
+}
+
+model MedicalHistory {
+  id             BigInt   @id @unique @default(autoincrement())
+  createdAt      DateTime @default(now())
+  patientID      BigInt
+  presentation   String
+  medicalHistory String
+
+  patient Patient @relation(fields: [patientID], references: [id])
+
+  @@map("medical_history")
+}
+
+model PrescriptionDetail {
+  id             BigInt   @id @unique @default(autoincrement())
+  createdAt      DateTime @default(now())
+  prescriptionID BigInt
+  drugID         BigInt
+  quantity       BigInt
+  durationInDays BigInt
+
+  prescription Prescription @relation(fields: [prescriptionID], references: [id])
+  drug         Drug         @relation(fields: [drugID], references: [id])
+
+  @@map("prescription_detail")
+}

@@ -10,6 +10,11 @@ npm init -y
 
 npm i express express-session express-validator mysql
 
+# Prisma installation
+
+npm i prisma @prisma/client  
+npx prisma migrate dev --name Create Tables
+
 # ES6 modules
 
 "type": "module", //Added to package.json
